@@ -1,0 +1,39 @@
+---
+############################# Filebeat ######################################
+filebeat:
+  # List of prospectors to fetch data.
+  prospectors:
+    # Each - is a prospector. Below are the prospector specific configurations
+    -
+      paths:
+      - /var/lib/docker/containers/*/*.log
+
+      input_type: log
+      symlinks: true
+
+      multiline:
+        pattern: ^\s*20[12]|^\{\"[a-zA-Z]+\"|^\d{4}-\d{2}-\d{2}
+        negate: true
+        match: after
+        max_lines: 1000
+
+      json:
+        keys_under_root: true
+        add_error_key: true
+        message_key: log
+
+      fields:
+        instanceId: ${INSTANCE_ID:not_available}
+        instanceRole: ${INSTANCE_ROLE:default}
+      fields_under_root: true
+
+      tags: ["docker"]
+
+# Multiple outputs may be used.
+output.elasticsearch:
+  hosts: ["http://${ELASTICSEARCH}:9200"]
+
+
+############################# Logging #########################################
+
+logging.level: ${LOG_LEVEL:info}
